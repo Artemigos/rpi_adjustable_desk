@@ -9,15 +9,22 @@ from time import sleep
 print("Starting up...")
 
 # pin numbers
-OUT_UP = 23
-OUT_DOWN = 24
+OUT_MAIN = 17
+OUT_LEFT_UP = 23
+OUT_LEFT_DOWN = 22
+OUT_RIGHT_UP = 27
+OUT_RIGHT_DOWN = 24
+
 BTN_UP = 19
 BTN_DOWN = 26
 BTN_UP_LONG = 6
 BTN_DOWN_LONG = 13
 
-print("Output pin for going up: ", OUT_UP)
-print("Output pin for going down: ", OUT_DOWN)
+print("Output pin for main power:", OUT_MAIN)
+print("Output pin for left engine going up: ", OUT_LEFT_UP)
+print("Output pin for left engine going down: ", OUT_LEFT_UP)
+print("Output pin for right engine going up: ", OUT_LEFT_UP)
+print("Output pin for right engine going down: ", OUT_RIGHT_DOWN)
 print("Input pin for going up: ", BTN_UP)
 print("Input pin for going down: ", BTN_DOWN)
 print("Input pin for going all the way up: ", BTN_UP_LONG)
@@ -27,14 +34,21 @@ print("Input pin for going all the way down: ", BTN_DOWN_LONG)
 gpio.setmode(gpio.BCM)
 
 # set pin's in/out mode
-gpio.setup([OUT_UP, OUT_DOWN], gpio.OUT)
+gpio.setup(
+        [OUT_MAIN, OUT_LEFT_UP, OUT_LEFT_DOWN, OUT_RIGHT_UP, OUT_RIGHT_DOWN],
+        gpio.OUT)
 gpio.setup(
         [BTN_UP, BTN_DOWN, BTN_UP_LONG, BTN_DOWN_LONG],
         gpio.IN,
         pull_up_down=gpio.PUD_DOWN)
 
 # initialize outputs
-engines.initialize(OUT_UP, OUT_DOWN)
+engines.initialize(
+        OUT_MAIN,
+        OUT_LEFT_UP,
+        OUT_LEFT_DOWN,
+        OUT_RIGHT_UP,
+        OUT_RIGHT_DOWN)
 
 # set up producer-consumer pattern
 QUEUE = aio.Queue()

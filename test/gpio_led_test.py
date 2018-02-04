@@ -1,7 +1,7 @@
 import RPi.GPIO as gpio
 from time import sleep
 
-PIN = 23
+PIN = [23, 24, 22, 27, 17]
 STEPS = 10
 
 gpio.setmode(gpio.BCM)

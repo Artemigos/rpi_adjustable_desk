@@ -7,8 +7,7 @@ from long_down_state import LongDownState
 
 class IdleState(State):
     def __init__(self):
-        engines.up_off()
-        engines.down_off()
+        engines.all_off()
 
     def on_up_pressed(self):
         return UpState()
