@@ -4,7 +4,7 @@ import signal
 import messages as msg
 import engines
 from state_machine import StateMachine
-from time import sleep
+import wrapped_io as io
 
 print("Starting up...")
 
@@ -33,14 +33,15 @@ print("Input pin for going all the way down: ", BTN_DOWN_LONG)
 # set pin numbering mode
 gpio.setmode(gpio.BCM)
 
+I_UP = io.Input(BTN_UP) 
+I_DOWN = io.Input(BTN_DOWN) 
+I_UP_LONG = io.Input(BTN_UP_LONG) 
+I_DOWN_LONG = io.Input(BTN_DOWN_LONG) 
+
 # set pin's in/out mode
 gpio.setup(
         [OUT_MAIN, OUT_LEFT_UP, OUT_LEFT_DOWN, OUT_RIGHT_UP, OUT_RIGHT_DOWN],
         gpio.OUT)
-gpio.setup(
-        [BTN_UP, BTN_DOWN, BTN_UP_LONG, BTN_DOWN_LONG],
-        gpio.IN,
-        pull_up_down=gpio.PUD_DOWN)
 
 # initialize outputs
 engines.initialize(
@@ -70,28 +71,25 @@ LOOP.create_task(timer_producer())
 
 # start reacting to input
 MSG_MAP = {
-        BTN_UP: (msg.UP_PRESSED, msg.UP_RELEASED),
-        BTN_DOWN: (msg.DOWN_PRESSED, msg.DOWN_RELEASED),
-        BTN_UP_LONG: (msg.UP_LONG_PRESSED, msg.UP_LONG_RELEASED),
-        BTN_DOWN_LONG: (msg.DOWN_LONG_PRESSED, msg.DOWN_LONG_RELEASED) }
+        I_UP: (msg.UP_PRESSED, msg.UP_RELEASED),
+        I_DOWN: (msg.DOWN_PRESSED, msg.DOWN_RELEASED),
+        I_UP_LONG: (msg.UP_LONG_PRESSED, msg.UP_LONG_RELEASED),
+        I_DOWN_LONG: (msg.DOWN_LONG_PRESSED, msg.DOWN_LONG_RELEASED) }
 
-async def input_callback(channel):
+async def rising_callback(channel):
     press, release = MSG_MAP[channel]
-    if gpio.input(channel):
-        print("[debug] got rising input from channel", channel)
-        await QUEUE.put(press)
-    else:
-        print("[debug] got falling input from channel", channel)
-        await QUEUE.put(release)
+    print("[debug] got rising input from channel", channel.pin)
+    await QUEUE.put(press)
 
-for k in MSG_MAP:
-    gpio.add_event_detect(k, gpio.BOTH, bouncetime=100)
+async def falling_callback(channel):
+    press, release = MSG_MAP[channel]
+    print("[debug] got falling input from channel", channel.pin)
+    await QUEUE.put(release)
 
 async def input_producer():
     while True:
         for k in MSG_MAP:
-            if gpio.event_detected(k):
-                await input_callback(k)
+            await k.dispatch_detected_event(rising_callback, falling_callback)
         await aio.sleep(0.05)
 
 LOOP.create_task(input_producer())
