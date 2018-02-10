@@ -15,7 +15,6 @@ class LongDownState(State):
         self.current_time += 1
         if self.current_time >= self.length:
             return ids.IdleState()
-        return self
 
     def on_up_pressed(self):
         return us.UpState()
